@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-blush: #f7e4de;
+    --color-blush-soft: #faf1ed;
+    --color-ivory: #fffdfb;
+    --color-rosegold: #c79282;
+    --color-rosegold-deep: #a46d5e;
+    --color-wine: #4a1010;
+    --color-wine-soft: #6d3a3a;
+    --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 88px;
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    background-color: var(--color-ivory);
+    color: var(--color-wine);
+  }
+
+  body {
+    overflow-x: hidden;
+    background-color: var(--color-ivory);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Foco acessível visível */
+  :focus-visible {
+    outline: 2px solid #c79282;
+    outline-offset: 3px;
+  }
+}
+
+/* =========================================================
+   ACABAMENTOS ROSE GOLD & TEXTURAS EDITORIAIS
+   ========================================================= */
+.rosegold-text {
+  background: linear-gradient(135deg, #a46d5e 0%, #cf9d8d 45%, #8f5748 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.rosegold-hairline {
+  background: linear-gradient(90deg, transparent 0%, #d4a697 30%, #c79282 50%, #d4a697 70%, transparent 100%);
+}
+
+.rosegold-border-ring {
+  background: linear-gradient(135deg, #e7c5b8 0%, #c79282 50%, #9f6758 100%);
+}
+
+.surface-blush-gradient {
+  background: linear-gradient(180deg, #fffdfb 0%, #fbf1ed 52%, #f7e4de 100%);
+}
+
+.surface-nude-radial {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(247, 228, 222, 0.72), transparent 52%),
+    radial-gradient(circle at 88% 82%, rgba(227, 192, 178, 0.34), transparent 48%),
+    #fffdfb;
+}
+
+/* =========================================================
+   BOTÕES PREMIUM BIOCLINIC
+   ========================================================= */
+.btn-primary {
+  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full bg-wine-800 px-7 py-3.5 text-sm font-medium tracking-wide text-blush-50 shadow-editorial transition-all duration-300;
+  transition-timing-function: var(--ease-luxury);
+}
+
+.btn-primary:hover {
+  @apply -translate-y-0.5 bg-wine-700 shadow-card-hover;
+}
+
+.btn-primary:active {
+  @apply translate-y-0 scale-[0.98];
+}
+
+.btn-secondary {
+  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full border border-rosegold/70 bg-ivory/80 px-7 py-3.5 text-sm font-medium tracking-wide text-wine-800 backdrop-blur-sm transition-all duration-300;
+  transition-timing-function: var(--ease-luxury);
+}
+
+.btn-secondary:hover {
+  @apply -translate-y-0.5 border-wine-800/40 bg-blush-200/70 shadow-soft-rose;
+}
+
+.btn-secondary:active {
+  @apply translate-y-0 scale-[0.98];
+}
+
+/* =========================================================
+   SISTEMA DE ANIMAÇÕES DE ROLAGEM (SEO-SAFE & ACESSÍVEL)
+   Só aplica estado inicial deslocado quando `html.js-reveal-ready`
+   está ativo no navegador (crawlers e SSR veem 100% do conteúdo).
+   ========================================================= */
+.reveal-item {
+  transition-property: opacity, transform, filter;
+  transition-duration: 760ms;
+  transition-timing-function: var(--ease-luxury);
+  will-change: opacity, transform;
+}
+
+html.js-reveal-ready .reveal-item:not(.is-visible) {
+  opacity: 0;
+}
+
+html.js-reveal-ready .reveal-item[data-reveal='up']:not(.is-visible) {
+  transform: translate3d(0, 32px, 0);
+}
+
+html.js-reveal-ready .reveal-item[data-reveal='left']:not(.is-visible) {
+  transform: translate3d(-40px, 0, 0);
+}
+
+html.js-reveal-ready .reveal-item[data-reveal='right']:not(.is-visible) {
+  transform: translate3d(40px, 0, 0);
+}
+
+html.js-reveal-ready .reveal-item[data-reveal='scale']:not(.is-visible) {
+  transform: scale(0.95);
+}
+
+html.js-reveal-ready .reveal-item[data-reveal='image']:not(.is-visible) {
+  transform: translate3d(0, 22px, 0) scale(1.03);
+}
+
+.reveal-item.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+/* Transição de etapas do agendamento e slides */
+@keyframes bioFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-step-in {
+  animation: bioFadeSlideIn 420ms var(--ease-luxury) both;
+}
+
+@keyframes bioSoftPulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 26px rgba(37, 211, 102, 0.34), 0 0 0 0 rgba(37, 211, 102, 0.36);
+  }
+  50% {
+    box-shadow: 0 14px 32px rgba(37, 211, 102, 0.42), 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+}
+
+.whatsapp-float-pulse {
+  animation: bioSoftPulse 3.2s ease-in-out infinite;
+}
+
+/* Barra de rolagem refinada */
+::-webkit-scrollbar {
+  width: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: #faf1ed;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d7b2a6;
+  border-radius: 9999px;
+  border: 2px solid #faf1ed;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b98272;
+}
+
+/* =========================================================
+   ACESSIBILIDADE: PREFERS-REDUCED-MOTION
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal-item,
+  html.js-reveal-ready .reveal-item:not(.is-visible) {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .animate-step-in,
+  .whatsapp-float-pulse {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

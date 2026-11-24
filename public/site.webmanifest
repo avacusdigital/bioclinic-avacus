@@ -1,0 +1,22 @@
+{
+  "name": "BioClinic Estética Avançada",
+  "short_name": "BioClinic",
+  "description": "Estética Avançada, Harmonização Facial e Corporal em São Luís - MA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFDFB",
+  "theme_color": "#F7E4DE",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

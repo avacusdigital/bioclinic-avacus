@@ -1,0 +1,26 @@
+# BioClinic Estética Avançada — robots.txt
+# Permite rastreamento por mecanismos de busca e rastreadores de IA autorizados.
+# Não bloqueia CSS, JS ou assets essenciais para renderização.
+
+User-agent: *
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+Sitemap: https://bioclinicesteticaavancada.com.br/sitemap.xml

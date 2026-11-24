@@ -1,0 +1,19 @@
+# Dependências
+node_modules/
+
+# Builds gerados automaticamente (a Vercel executa `npm run build` no deploy)
+dist/
+dist-ssr/
+
+# Logs e ambiente local
+*.log
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+
+# Sistema operacional / Editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
