@@ -9,7 +9,7 @@ export const ReviewsSection: React.FC = () => {
     <section
       id="avaliacoes"
       aria-labelledby="avaliacoes-heading"
-      className="relative overflow-hidden bg-blush-100/80 py-20 sm:py-24"
+      className="relative scroll-mt-16 overflow-hidden bg-blush-100/80 py-12 sm:py-16"
     >
       <div
         aria-hidden="true"
@@ -18,8 +18,7 @@ export const ReviewsSection: React.FC = () => {
 
       <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <Reveal direction="scale">
-          <div className="overflow-hidden rounded-[2.25rem] border border-rosegold/35 bg-ivory p-8 text-center shadow-editorial sm:p-12 lg:p-14">
-            {/* Selo Google oficial + estrelas douradas */}
+          <div className="overflow-hidden rounded-[2rem] border border-rosegold/35 bg-ivory p-8 text-center shadow-editorial sm:p-11 lg:p-12">
             <div className="mx-auto flex flex-col items-center">
               <div className="inline-flex items-center gap-3 rounded-full border border-rosegold/25 bg-blush-50 px-5 py-2.5 shadow-sm">
                 <GoogleGIcon className="h-6 w-6" />
@@ -43,28 +42,27 @@ export const ReviewsSection: React.FC = () => {
 
               <h2
                 id="avaliacoes-heading"
-                className="mt-6 font-serif text-4xl font-semibold text-wine-800 sm:text-5xl"
+                className="mt-5 font-serif text-3xl font-semibold text-wine-800 sm:text-4xl lg:text-5xl"
               >
                 Avaliações
               </h2>
 
-              <div aria-hidden="true" className="mt-4 h-[1.5px] w-16 bg-rosegold" />
+              <div aria-hidden="true" className="mt-3.5 h-[2px] w-16 rounded-full bg-rosegold" />
 
-              <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-wine-800/80 sm:text-base">
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-wine-800/80 sm:text-base">
                 Sua opinião é muito importante para a {CLINIC_CONFIG.name}. Se você já viveu a
                 experiência de atendimento conosco, compartilhe sua avaliação no Google e ajude
                 outras pessoas a conhecerem nosso cuidado.
               </p>
 
-              {/* Botão destacado Avaliar no Google com ícone G multicolorido oficial */}
-              <div className="mt-8">
+              <div className="mt-7">
                 <a
                   href={CLINIC_CONFIG.reviews.googleReviewUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group inline-flex items-center justify-center gap-3 rounded-full border border-rosegold/45 bg-ivory px-8 py-4 text-sm font-semibold tracking-wide text-wine-800 shadow-soft-rose transition-all duration-300 hover:-translate-y-0.5 hover:border-wine-800/35 hover:bg-blush-100 hover:shadow-editorial active:scale-[0.98]"
+                  className="group inline-flex items-center justify-center gap-3 rounded-full border border-rosegold/45 bg-ivory px-8 py-3.5 text-sm font-semibold tracking-wide text-wine-800 shadow-soft-rose transition-all duration-300 hover:-translate-y-0.5 hover:border-wine-800/35 hover:bg-blush-100 hover:shadow-editorial active:scale-[0.98]"
                 >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300 group-hover:scale-105">
                     <GoogleGIcon className="h-4 w-4" />
                   </span>
                   <span>Avaliar no Google</span>

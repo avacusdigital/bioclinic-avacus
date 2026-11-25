@@ -60,10 +60,10 @@ export const CLINIC_CONFIG = {
     alt: 'Logotipo oficial BioClinic Estética Avançada',
   },
   hero: {
-    mainImage: '/images/hero-clinic.jpg',
-    mainImageAlt: 'Ambiente sofisticado da BioClinic Estética Avançada em tons nude e rose gold',
-    detailImage: '/images/hero-detail.jpg',
-    detailImageAlt: 'Detalhe editorial de cuidados estéticos avançados na BioClinic',
+    desktopImage: '/images/hero-bg-desktop.jpg',
+    mobileImage: '/images/hero-bg-mobile.jpg',
+    mainImageAlt:
+      'Ambiente ilustrativo de clínica de estética avançada em tons nude rosado e rose gold',
   },
   contact: {
     phoneDisplay: '(98) 98811-1576',

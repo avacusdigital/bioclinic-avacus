@@ -4,78 +4,86 @@
 
 @layer base {
   :root {
-    --color-blush: #f7e4de;
-    --color-blush-soft: #faf1ed;
-    --color-ivory: #fffdfb;
-    --color-rosegold: #c79282;
-    --color-rosegold-deep: #a46d5e;
-    --color-wine: #4a1010;
-    --color-wine-soft: #6d3a3a;
+    color-scheme: light only;
+    --bio-blush: #f7e4de;
+    --bio-blush-soft: #faf0ec;
+    --bio-blush-tint: #fdf8f6;
+    --bio-ivory: #fffdfb;
+    --bio-rosegold-light: #e4c2b4;
+    --bio-rosegold: #c79282;
+    --bio-rosegold-dark: #9e6657;
+    --bio-wine: #4a1010;
+    --bio-wine-hover: #5e1818;
+    --bio-wine-deep: #340a0a;
+    --header-offset: 64px;
     --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   html {
+    color-scheme: light only;
     scroll-behavior: smooth;
-    scroll-padding-top: 88px;
-    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
-    background-color: var(--color-ivory);
-    color: var(--color-wine);
+    scroll-padding-top: var(--header-offset);
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--bio-ivory);
+    color: var(--bio-wine);
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    overflow-x: hidden;
-    background-color: var(--color-ivory);
+    overflow-x: clip;
+    background-color: var(--bio-ivory);
+    color: var(--bio-wine);
   }
 
   h1,
   h2,
   h3,
   h4 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    letter-spacing: -0.01em;
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.012em;
   }
 
-  /* Foco acessível visível */
   :focus-visible {
-    outline: 2px solid #c79282;
+    outline: 2px solid var(--bio-rosegold);
     outline-offset: 3px;
   }
 }
 
 /* =========================================================
-   ACABAMENTOS ROSE GOLD & TEXTURAS EDITORIAIS
+   ACABAMENTOS ROSE GOLD & SUPERFÍCIES PADRONIZADAS
    ========================================================= */
-.rosegold-text {
-  background: linear-gradient(135deg, #a46d5e 0%, #cf9d8d 45%, #8f5748 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 .rosegold-hairline {
-  background: linear-gradient(90deg, transparent 0%, #d4a697 30%, #c79282 50%, #d4a697 70%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #e4c2b4 25%,
+    #c79282 50%,
+    #e4c2b4 75%,
+    transparent 100%
+  );
 }
 
 .rosegold-border-ring {
-  background: linear-gradient(135deg, #e7c5b8 0%, #c79282 50%, #9f6758 100%);
+  background: linear-gradient(135deg, #e8c7ba 0%, #c79282 50%, #9e6657 100%);
 }
 
 .surface-blush-gradient {
-  background: linear-gradient(180deg, #fffdfb 0%, #fbf1ed 52%, #f7e4de 100%);
+  background: linear-gradient(180deg, #fffdfb 0%, #faf0ec 50%, #f7e4de 100%);
 }
 
 .surface-nude-radial {
   background:
-    radial-gradient(circle at 12% 18%, rgba(247, 228, 222, 0.72), transparent 52%),
-    radial-gradient(circle at 88% 82%, rgba(227, 192, 178, 0.34), transparent 48%),
+    radial-gradient(circle at 12% 16%, rgba(247, 228, 222, 0.78), transparent 52%),
+    radial-gradient(circle at 88% 84%, rgba(228, 194, 180, 0.36), transparent 48%),
     #fffdfb;
 }
 
 /* =========================================================
-   BOTÕES PREMIUM BIOCLINIC
+   BOTÕES PREMIUM PADRONIZADOS
    ========================================================= */
 .btn-primary {
-  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full bg-wine-800 px-7 py-3.5 text-sm font-medium tracking-wide text-blush-50 shadow-editorial transition-all duration-300;
+  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full bg-wine-800 px-6 py-3 text-sm font-semibold tracking-wide text-blush-50 shadow-editorial transition-all duration-300;
   transition-timing-function: var(--ease-luxury);
 }
 
@@ -84,30 +92,121 @@
 }
 
 .btn-primary:active {
-  @apply translate-y-0 scale-[0.98];
+  @apply translate-y-0 scale-[0.97];
 }
 
 .btn-secondary {
-  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full border border-rosegold/70 bg-ivory/80 px-7 py-3.5 text-sm font-medium tracking-wide text-wine-800 backdrop-blur-sm transition-all duration-300;
+  @apply relative inline-flex items-center justify-center gap-2.5 rounded-full border border-rosegold/75 bg-ivory/90 px-6 py-3 text-sm font-semibold tracking-wide text-wine-800 backdrop-blur-sm transition-all duration-300;
   transition-timing-function: var(--ease-luxury);
 }
 
 .btn-secondary:hover {
-  @apply -translate-y-0.5 border-wine-800/40 bg-blush-200/70 shadow-soft-rose;
+  @apply -translate-y-0.5 border-wine-800/45 bg-blush-200/80 shadow-soft-rose;
 }
 
 .btn-secondary:active {
-  @apply translate-y-0 scale-[0.98];
+  @apply translate-y-0 scale-[0.97];
+}
+
+/* =========================================================
+   NAVEGAÇÃO — LINHA ANIMADA ABAIXO DOS LINKS
+   ========================================================= */
+.nav-link-item {
+  position: relative;
+}
+
+.nav-link-item::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #c79282, #4a1010);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 280ms var(--ease-luxury);
+}
+
+.nav-link-item:hover::after,
+.nav-link-item[data-active='true']::after {
+  transform: scaleX(1);
+}
+
+/* =========================================================
+   SEÇÃO SOBRE A CLÍNICA — CONTORNO ANIMADO NAS LATERAIS
+   ========================================================= */
+.about-photo-shell {
+  position: relative;
+  transition: transform 480ms var(--ease-luxury), box-shadow 480ms var(--ease-luxury);
+}
+
+.about-photo-shell::before,
+.about-photo-shell::after {
+  content: '';
+  position: absolute;
+  top: 14%;
+  bottom: 14%;
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, transparent 0%, #c79282 28%, #4a1010 50%, #c79282 72%, transparent 100%);
+  opacity: 0.72;
+  transition: top 460ms var(--ease-luxury), bottom 460ms var(--ease-luxury), opacity 420ms ease,
+    transform 460ms var(--ease-luxury);
+  pointer-events: none;
+}
+
+.about-photo-shell::before {
+  left: -12px;
+}
+
+.about-photo-shell::after {
+  right: -12px;
+}
+
+@media (hover: hover) {
+  .about-photo-shell:hover {
+    transform: scale(1.028);
+  }
+
+  .about-photo-shell:hover::before {
+    top: 3%;
+    bottom: 3%;
+    opacity: 1;
+    transform: translateX(-4px);
+  }
+
+  .about-photo-shell:hover::after {
+    top: 3%;
+    bottom: 3%;
+    opacity: 1;
+    transform: translateX(4px);
+  }
+}
+
+.about-photo-shell:active {
+  transform: scale(1.015);
+}
+
+/* =========================================================
+   CARROSSÉIS DE SERVIÇOS — SCROLLBAR LIMPA
+   ========================================================= */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* =========================================================
    SISTEMA DE ANIMAÇÕES DE ROLAGEM (SEO-SAFE & ACESSÍVEL)
-   Só aplica estado inicial deslocado quando `html.js-reveal-ready`
-   está ativo no navegador (crawlers e SSR veem 100% do conteúdo).
    ========================================================= */
 .reveal-item {
-  transition-property: opacity, transform, filter;
-  transition-duration: 760ms;
+  transition-property: opacity, transform;
+  transition-duration: 680ms;
   transition-timing-function: var(--ease-luxury);
   will-change: opacity, transform;
 }
@@ -117,23 +216,23 @@ html.js-reveal-ready .reveal-item:not(.is-visible) {
 }
 
 html.js-reveal-ready .reveal-item[data-reveal='up']:not(.is-visible) {
-  transform: translate3d(0, 32px, 0);
+  transform: translate3d(0, 26px, 0);
 }
 
 html.js-reveal-ready .reveal-item[data-reveal='left']:not(.is-visible) {
-  transform: translate3d(-40px, 0, 0);
+  transform: translate3d(-34px, 0, 0);
 }
 
 html.js-reveal-ready .reveal-item[data-reveal='right']:not(.is-visible) {
-  transform: translate3d(40px, 0, 0);
+  transform: translate3d(34px, 0, 0);
 }
 
 html.js-reveal-ready .reveal-item[data-reveal='scale']:not(.is-visible) {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 html.js-reveal-ready .reveal-item[data-reveal='image']:not(.is-visible) {
-  transform: translate3d(0, 22px, 0) scale(1.03);
+  transform: translate3d(0, 18px, 0) scale(1.02);
 }
 
 .reveal-item.is-visible {
@@ -141,11 +240,10 @@ html.js-reveal-ready .reveal-item[data-reveal='image']:not(.is-visible) {
   transform: translate3d(0, 0, 0) scale(1);
 }
 
-/* Transição de etapas do agendamento e slides */
 @keyframes bioFadeSlideIn {
   from {
     opacity: 0;
-    transform: translate3d(0, 14px, 0);
+    transform: translate3d(0, 12px, 0);
   }
   to {
     opacity: 1;
@@ -154,16 +252,16 @@ html.js-reveal-ready .reveal-item[data-reveal='image']:not(.is-visible) {
 }
 
 .animate-step-in {
-  animation: bioFadeSlideIn 420ms var(--ease-luxury) both;
+  animation: bioFadeSlideIn 380ms var(--ease-luxury) both;
 }
 
 @keyframes bioSoftPulse {
   0%,
   100% {
-    box-shadow: 0 10px 26px rgba(37, 211, 102, 0.34), 0 0 0 0 rgba(37, 211, 102, 0.36);
+    box-shadow: 0 10px 24px rgba(37, 211, 102, 0.34), 0 0 0 0 rgba(37, 211, 102, 0.34);
   }
   50% {
-    box-shadow: 0 14px 32px rgba(37, 211, 102, 0.42), 0 0 0 10px rgba(37, 211, 102, 0);
+    box-shadow: 0 14px 30px rgba(37, 211, 102, 0.42), 0 0 0 9px rgba(37, 211, 102, 0);
   }
 }
 
@@ -171,23 +269,22 @@ html.js-reveal-ready .reveal-item[data-reveal='image']:not(.is-visible) {
   animation: bioSoftPulse 3.2s ease-in-out infinite;
 }
 
-/* Barra de rolagem refinada */
 ::-webkit-scrollbar {
   width: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #faf1ed;
+  background: #faf0ec;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #d7b2a6;
   border-radius: 9999px;
-  border: 2px solid #faf1ed;
+  border: 2px solid #faf0ec;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b98272;
+  background: #b87e6e;
 }
 
 /* =========================================================

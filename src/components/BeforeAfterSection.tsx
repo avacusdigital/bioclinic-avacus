@@ -1,30 +1,22 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Info, MoveHorizontal } from 'lucide-react';
-import { BEFORE_AFTER_GALLERY } from '../config/clinic';
+import { BEFORE_AFTER_GALLERY, BeforeAfterItem } from '../config/clinic';
 import { Reveal } from './Reveal';
 
-export const BeforeAfterSection: React.FC = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+interface ComparisonCardProps {
+  item: BeforeAfterItem;
+  indexLabel: string;
+}
+
+const ComparisonCard: React.FC<ComparisonCardProps> = ({ item, indexLabel }) => {
   const [dividerPercent, setDividerPercent] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
-
   const stageRef = useRef<HTMLDivElement | null>(null);
-  const swipeStartXRef = useRef<number | null>(null);
 
-  const total = BEFORE_AFTER_GALLERY.length;
-  const activeItem = BEFORE_AFTER_GALLERY[currentIndex];
-
-  const goToIndex = useCallback(
-    (next: number) => {
-      const normalized = ((next % total) + total) % total;
-      setCurrentIndex(normalized);
-      setDividerPercent(50);
-    },
-    [total],
-  );
-
-  const goPrev = () => goToIndex(currentIndex - 1);
-  const goNext = () => goToIndex(currentIndex + 1);
+  // Reinicia divisor para 50% quando muda o item exibido no slot
+  useEffect(() => {
+    setDividerPercent(50);
+  }, [item.id]);
 
   const updateDividerFromClientX = useCallback((clientX: number) => {
     const el = stageRef.current;
@@ -32,8 +24,7 @@ export const BeforeAfterSection: React.FC = () => {
     const rect = el.getBoundingClientRect();
     if (rect.width <= 0) return;
     const raw = ((clientX - rect.left) / rect.width) * 100;
-    const clamped = Math.max(4, Math.min(96, raw));
-    setDividerPercent(clamped);
+    setDividerPercent(Math.max(5, Math.min(95, raw)));
   }, []);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -48,27 +39,137 @@ export const BeforeAfterSection: React.FC = () => {
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isDragging) {
-      try {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {
-        // Ignora se a captura já tiver sido liberada
-      }
-      setIsDragging(false);
+    if (!isDragging) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignora se já liberado
     }
+    setIsDragging(false);
   };
 
   const handleSliderKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      setDividerPercent((prev) => Math.max(4, prev - 5));
+      setDividerPercent((prev) => Math.max(5, prev - 5));
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      setDividerPercent((prev) => Math.min(96, prev + 5));
+      setDividerPercent((prev) => Math.min(95, prev + 5));
     }
   };
 
-  // Suporte a swipe horizontal na área de controles/legenda no celular para trocar slides
+  return (
+    <div className="animate-step-in overflow-hidden rounded-[1.75rem] border border-rosegold/35 bg-blush-50 shadow-card transition-all duration-300 hover:shadow-card-hover">
+      {/* Topo do card */}
+      <div className="flex items-center justify-between gap-2 border-b border-rosegold/20 bg-ivory px-4 py-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="shrink-0 rounded-full bg-blush-200 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-wine-800">
+            {item.category === 'facial' ? 'Facial' : 'Corporal'}
+          </span>
+          <h3 className="truncate font-serif text-lg font-semibold text-wine-800 sm:text-xl">
+            {item.procedure}
+          </h3>
+        </div>
+        <span className="shrink-0 text-[11px] font-semibold tracking-wider text-wine-800/65">
+          {indexLabel}
+        </span>
+      </div>
+
+      {/* Palco comparador */}
+      <div
+        ref={stageRef}
+        role="slider"
+        tabIndex={0}
+        aria-label={`Comparador Antes e Depois de ${item.procedure}. Arraste ou use as setas do teclado.`}
+        aria-valuemin={5}
+        aria-valuemax={95}
+        aria-valuenow={Math.round(dividerPercent)}
+        onKeyDown={handleSliderKeyDown}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{ touchAction: 'none' }}
+        className="relative aspect-[4/3] w-full cursor-ew-resize select-none overflow-hidden bg-blush-200/60"
+      >
+        {/* Depois (base) */}
+        <img
+          src={item.afterImage}
+          alt={item.afterAlt}
+          width={1080}
+          height={760}
+          draggable={false}
+          loading="lazy"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+        />
+
+        {/* Antes (recorte sobreposto) */}
+        <div
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{ clipPath: `inset(0 ${100 - dividerPercent}% 0 0)` }}
+        >
+          <img
+            src={item.beforeImage}
+            alt={item.beforeAlt}
+            width={1080}
+            height={760}
+            draggable={false}
+            loading="lazy"
+            className="h-full w-full object-cover object-center"
+          />
+        </div>
+
+        <span className="pointer-events-none absolute left-3 top-3 rounded-full bg-wine-900/75 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-blush-50 backdrop-blur-sm">
+          Antes
+        </span>
+        <span className="pointer-events-none absolute right-3 top-3 rounded-full bg-ivory/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-wine-800 shadow-sm backdrop-blur-sm">
+          Depois
+        </span>
+
+        {item.isIllustrative && (
+          <span className="pointer-events-none absolute bottom-2.5 left-3 rounded-full bg-wine-900/70 px-2.5 py-0.5 text-[10px] font-medium tracking-wide text-blush-100 backdrop-blur-sm">
+            Demonstração ilustrativa
+          </span>
+        )}
+
+        {/* Linha divisória e alça */}
+        <div
+          aria-hidden="true"
+          style={{ left: `${dividerPercent}%` }}
+          className="pointer-events-none absolute inset-y-0 z-10 w-[2px] -translate-x-1/2 bg-ivory shadow-[0_0_14px_rgba(74,16,16,0.45)]"
+        >
+          <div
+            className={`absolute left-1/2 top-1/2 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-ivory bg-wine-800 text-blush-50 shadow-editorial transition-transform duration-200 ${
+              isDragging ? 'scale-110 bg-wine-700' : 'scale-100'
+            }`}
+          >
+            <MoveHorizontal className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const BeforeAfterSection: React.FC = () => {
+  // Índice para mobile (1 por vez) e para desktop/notebook (2 por vez)
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [desktopPage, setDesktopPage] = useState(0);
+  const swipeStartXRef = useRef<number | null>(null);
+
+  const total = BEFORE_AFTER_GALLERY.length;
+  const desktopTotalPages = Math.ceil(total / 2);
+
+  const prevDesktop = () =>
+    setDesktopPage((prev) => ((prev - 1) % desktopTotalPages + desktopTotalPages) % desktopTotalPages);
+  const nextDesktop = () => setDesktopPage((prev) => (prev + 1) % desktopTotalPages);
+
+  const prevMobile = () => setMobileIndex((prev) => ((prev - 1) % total + total) % total);
+  const nextMobile = () => setMobileIndex((prev) => (prev + 1) % total);
+
+  const desktopItems = BEFORE_AFTER_GALLERY.slice(desktopPage * 2, desktopPage * 2 + 2);
+  const activeMobileItem = BEFORE_AFTER_GALLERY[mobileIndex];
+
   const handleSwipeStart = (e: React.TouchEvent<HTMLDivElement>) => {
     swipeStartXRef.current = e.touches[0]?.clientX ?? null;
   };
@@ -80,8 +181,8 @@ export const BeforeAfterSection: React.FC = () => {
     if (startX === null || endX === null) return;
     const delta = endX - startX;
     if (Math.abs(delta) > 48) {
-      if (delta < 0) goNext();
-      else goPrev();
+      if (delta < 0) nextMobile();
+      else prevMobile();
     }
   };
 
@@ -89,226 +190,130 @@ export const BeforeAfterSection: React.FC = () => {
     <section
       id="antes-e-depois"
       aria-labelledby="antes-depois-heading"
-      className="relative bg-ivory py-20 sm:py-24 lg:py-28"
+      className="relative scroll-mt-16 bg-ivory py-10 sm:py-12 lg:py-14"
     >
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {/* Cabeçalho */}
-        <div className="mx-auto max-w-3xl text-center">
-          <Reveal direction="up">
-            <span className="font-script text-4xl text-rosegold-dark">Galeria Interativa</span>
-            <h2
-              id="antes-depois-heading"
-              className="mt-1 font-serif text-4xl font-semibold text-wine-800 sm:text-5xl"
-            >
-              Antes e Depois
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-wine-800/75 sm:text-base">
-              Arraste o controle central para comparar e utilize as setas para navegar entre os
-              procedimentos.
-            </p>
+        {/* Cabeçalho compacto no topo + controles Desktop */}
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <Reveal direction="left">
+            <div>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rosegold-dark">
+                Galeria Interativa
+              </span>
+              <h2
+                id="antes-depois-heading"
+                className="mt-1 font-serif text-3xl font-semibold text-wine-800 sm:text-4xl lg:text-[2.6rem]"
+              >
+                Antes e Depois
+              </h2>
+              <p className="mt-1.5 text-sm text-wine-800/75">
+                Arraste o divisor central em cada imagem para comparar os procedimentos.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Controles Desktop (2 comparações por visualização) */}
+          <Reveal direction="right" delayMs={60}>
+            <div className="hidden items-center gap-3 md:flex">
+              <span
+                aria-live="polite"
+                className="text-xs font-semibold uppercase tracking-[0.16em] text-wine-800/75"
+              >
+                {desktopPage * 2 + 1}–{Math.min(desktopPage * 2 + 2, total)} de {total}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={prevDesktop}
+                  aria-label="Comparações anteriores"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/45 bg-blush-50 text-wine-800 transition-all duration-200 hover:-translate-y-0.5 hover:bg-wine-800 hover:text-blush-50 active:scale-95"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextDesktop}
+                  aria-label="Próximas comparações"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/45 bg-blush-50 text-wine-800 transition-all duration-200 hover:-translate-y-0.5 hover:bg-wine-800 hover:text-blush-50 active:scale-95"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           </Reveal>
         </div>
 
-        {/* Palco principal da galeria (exibe uma comparação por vez) */}
-        <Reveal direction="scale" delayMs={100}>
-          <div className="relative mx-auto mt-12 max-w-4xl">
-            {/* Seta esquerda Desktop */}
-            <button
-              type="button"
-              onClick={goPrev}
-              aria-label="Resultado anterior"
-              className="absolute -left-6 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-rosegold/40 bg-ivory/95 text-wine-800 shadow-editorial backdrop-blur-md transition-all duration-300 hover:-translate-x-0.5 hover:bg-wine-800 hover:text-blush-50 active:scale-95 lg:inline-flex"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
+        {/* DESKTOP E NOTEBOOK: 2 imagens de comparação lado a lado */}
+        <div className="mt-6 hidden gap-6 md:grid md:grid-cols-2">
+          {desktopItems.map((item, idx) => (
+            <ComparisonCard
+              key={item.id}
+              item={item}
+              indexLabel={`${desktopPage * 2 + idx + 1} de ${total}`}
+            />
+          ))}
+        </div>
 
-            {/* Seta direita Desktop */}
-            <button
-              type="button"
-              onClick={goNext}
-              aria-label="Próximo resultado"
-              className="absolute -right-6 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-rosegold/40 bg-ivory/95 text-wine-800 shadow-editorial backdrop-blur-md transition-all duration-300 hover:translate-x-0.5 hover:bg-wine-800 hover:text-blush-50 active:scale-95 lg:inline-flex"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
+        {/* CELULAR: 1 imagem de comparação por vez com setas e swipe */}
+        <div className="mt-6 md:hidden">
+          <ComparisonCard
+            key={activeMobileItem.id}
+            item={activeMobileItem}
+            indexLabel={`${mobileIndex + 1} de ${total}`}
+          />
 
-            {/* Card do Comparador */}
-            <div className="overflow-hidden rounded-[2rem] border border-rosegold/30 bg-blush-50 shadow-editorial">
-              {/* Barra superior: Procedimento + Indicador de posição */}
-              <div
-                onTouchStart={handleSwipeStart}
-                onTouchEnd={handleSwipeEnd}
-                className="flex flex-wrap items-center justify-between gap-3 border-b border-rosegold/20 bg-ivory/90 px-5 py-4 sm:px-7"
+          <div
+            onTouchStart={handleSwipeStart}
+            onTouchEnd={handleSwipeEnd}
+            className="mt-4 flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={prevMobile}
+                aria-label="Comparação anterior"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/45 bg-blush-50 text-wine-800 transition-all hover:bg-wine-800 hover:text-blush-50 active:scale-95"
               >
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-blush-200 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-wine-800">
-                    {activeItem.category === 'facial' ? 'Facial' : 'Corporal'}
-                  </span>
-                  <h3
-                    key={activeItem.id}
-                    className="animate-step-in font-serif text-xl font-semibold text-wine-800 sm:text-2xl"
-                  >
-                    {activeItem.procedure}
-                  </h3>
-                </div>
-
-                <div className="flex items-center gap-2 text-xs font-semibold tracking-[0.16em] text-wine-800/75">
-                  <span aria-live="polite">
-                    {currentIndex + 1} de {total}
-                  </span>
-                </div>
-              </div>
-
-              {/* Comparador sobreposto com divisor móvel */}
-              <div
-                ref={stageRef}
-                role="slider"
-                tabIndex={0}
-                aria-label={`Comparador Antes e Depois de ${activeItem.procedure}. Use as setas esquerda e direita ou arraste para ajustar a divisão.`}
-                aria-valuemin={4}
-                aria-valuemax={96}
-                aria-valuenow={Math.round(dividerPercent)}
-                onKeyDown={handleSliderKeyDown}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                style={{ touchAction: 'none' }}
-                className="relative aspect-[4/3] w-full cursor-ew-resize select-none overflow-hidden bg-blush-200/60 sm:aspect-[16/10]"
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={nextMobile}
+                aria-label="Próxima comparação"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/45 bg-blush-50 text-wine-800 transition-all hover:bg-wine-800 hover:text-blush-50 active:scale-95"
               >
-                {/* Camada Base — DEPOIS */}
-                <img
-                  key={`${activeItem.id}-after`}
-                  src={activeItem.afterImage}
-                  alt={activeItem.afterAlt}
-                  width={1080}
-                  height={760}
-                  draggable={false}
-                  loading="lazy"
-                  className="animate-step-in pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2" role="tablist" aria-label="Selecionar comparação">
+              {BEFORE_AFTER_GALLERY.map((item, idx) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={idx === mobileIndex}
+                  aria-label={`Ver ${item.procedure}`}
+                  onClick={() => setMobileIndex(idx)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    idx === mobileIndex ? 'w-7 bg-wine-800' : 'w-2 bg-rosegold/45'
+                  }`}
                 />
-
-                {/* Camada Sobreposta Recortada — ANTES */}
-                <div
-                  className="pointer-events-none absolute inset-0 overflow-hidden"
-                  style={{ clipPath: `inset(0 ${100 - dividerPercent}% 0 0)` }}
-                >
-                  <img
-                    key={`${activeItem.id}-before`}
-                    src={activeItem.beforeImage}
-                    alt={activeItem.beforeAlt}
-                    width={1080}
-                    height={760}
-                    draggable={false}
-                    loading="lazy"
-                    className="h-full w-full object-cover object-center"
-                  />
-                </div>
-
-                {/* Etiquetas discretas Antes / Depois */}
-                <span className="pointer-events-none absolute left-4 top-4 rounded-full bg-wine-900/70 px-3.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-blush-50 backdrop-blur-sm">
-                  Antes
-                </span>
-                <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-ivory/90 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-wine-800 shadow-sm backdrop-blur-sm">
-                  Depois
-                </span>
-
-                {/* Etiqueta clara de demonstração ilustrativa */}
-                {activeItem.isIllustrative && (
-                  <span className="pointer-events-none absolute bottom-3 left-4 rounded-full bg-wine-900/65 px-3 py-1 text-[10px] font-medium tracking-wider text-blush-100 backdrop-blur-sm">
-                    Demonstração ilustrativa
-                  </span>
-                )}
-
-                {/* Linha vertical divisória + Alça arrastável */}
-                <div
-                  aria-hidden="true"
-                  style={{ left: `${dividerPercent}%` }}
-                  className="pointer-events-none absolute inset-y-0 z-10 w-[2px] -translate-x-1/2 bg-ivory shadow-[0_0_16px_rgba(74,16,16,0.45)]"
-                >
-                  <div
-                    className={`absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-ivory bg-wine-800 text-blush-50 shadow-editorial transition-transform duration-200 ${
-                      isDragging ? 'scale-110 bg-wine-700' : 'scale-100'
-                    }`}
-                  >
-                    <MoveHorizontal className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Barra inferior: Controles móveis + paginação + aviso transparente */}
-              <div
-                onTouchStart={handleSwipeStart}
-                onTouchEnd={handleSwipeEnd}
-                className="flex flex-col gap-4 bg-ivory px-5 py-5 sm:px-7"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  {/* Controles acessíveis mobile/tablet */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={goPrev}
-                      aria-label="Comparação anterior"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/40 bg-blush-50 text-wine-800 transition-all duration-200 hover:bg-wine-800 hover:text-blush-50 active:scale-95"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={goNext}
-                      aria-label="Próxima comparação"
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-rosegold/40 bg-blush-50 text-wine-800 transition-all duration-200 hover:bg-wine-800 hover:text-blush-50 active:scale-95"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-
-                  {/* Indicadores de página */}
-                  <div
-                    role="tablist"
-                    aria-label="Selecionar item da galeria Antes e Depois"
-                    className="flex items-center gap-2"
-                  >
-                    {BEFORE_AFTER_GALLERY.map((item, idx) => {
-                      const active = idx === currentIndex;
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="tab"
-                          aria-selected={active}
-                          aria-label={`Ver ${item.procedure} (${idx + 1} de ${total})`}
-                          onClick={() => goToIndex(idx)}
-                          className={`h-2.5 rounded-full transition-all duration-300 ${
-                            active
-                              ? 'w-8 bg-wine-800'
-                              : 'w-2.5 bg-rosegold/45 hover:bg-rosegold'
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Aviso transparente obrigatório sobre imagens ilustrativas */}
-                {activeItem.isIllustrative && (
-                  <div className="flex items-start gap-2.5 rounded-2xl border border-rosegold/25 bg-blush-100/75 px-4 py-3 text-xs leading-relaxed text-wine-800/80">
-                    <Info
-                      className="mt-0.5 h-4 w-4 shrink-0 text-rosegold-dark"
-                      aria-hidden="true"
-                    />
-                    <p>
-                      <strong className="font-semibold text-wine-800">Aviso ilustrativo:</strong>{' '}
-                      As imagens exibidas nesta galeria são demonstrações provisórias ilustrativas
-                      para apresentação do recurso interativo e não representam resultados reais de
-                      pacientes. Cada resultado é individual e depende de avaliação presencial.
-                    </p>
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
           </div>
-        </Reveal>
+        </div>
+
+        {/* Aviso transparente obrigatório sobre imagens ilustrativas */}
+        <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-rosegold/30 bg-blush-100/75 px-4 py-3 text-xs leading-relaxed text-wine-800/80">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-rosegold-dark" aria-hidden="true" />
+          <p>
+            <strong className="font-semibold text-wine-800">Aviso ilustrativo:</strong> As imagens
+            exibidas nesta galeria são demonstrações provisórias ilustrativas para apresentação do
+            comparador e não representam fotografias reais de pacientes. Resultados individuais
+            dependem de avaliação presencial.
+          </p>
+        </div>
       </div>
     </section>
   );
