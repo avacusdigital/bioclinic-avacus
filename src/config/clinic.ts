@@ -82,9 +82,9 @@ export const CLINIC_CONFIG = {
       country: 'BR',
       full: 'Av. Contorno Sul, 18 - Cohatrac, Itaguara, São Luís - MA, CEP 65052-116',
     },
-    mapsShareUrl: 'https://share.google/fnh48qc1tONJwOzlG',
+    mapsShareUrl: 'https://maps.app.goo.gl/ZWAND1789YxbTruf8?g_st=ac',
     mapsEmbedUrl:
-      'https://maps.google.com/maps?q=Av.%20Contorno%20Sul%2C%2018%20-%20Cohatrac%2C%20S%C3%A3o%20Lu%C3%ADs%20-%20MA%2C%2065052-116&t=&z=16&ie=UTF8&iwloc=&output=embed',
+      'https://maps.google.com/maps?cid=8565621051884052575&hl=pt-BR&z=17&output=embed',
   },
   social: {
     instagram: {
@@ -98,14 +98,8 @@ export const CLINIC_CONFIG = {
     },
   },
   reviews: {
-    /**
-     * URL de avaliação no Google centralizada para fácil substituição.
-     * Nota técnica: o link fornecido inicialmente abre a busca local do Google.
-     * Quando tiver o link direto do Google Business Profile (ex.: https://g.page/r/.../review),
-     * basta substituir o valor abaixo.
-     */
     googleReviewUrl:
-      'https://www.google.com/search?q=clinica+de+est%C3%A9tica+s%C3%A3o+luis&client=ms-android-samsung-a1-terr1-rvo0cqb&udm=local',
+      'https://www.google.com/search?q=bioclinic+Est%C3%A9tica&oq=bioclinic+Est%C3%A9tica&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIICAEQRRgnGDsyBwgCEAAYgAQyCAgDEAAYFhgeMggIBBAAGBYYHjIHCAUQABjvBTIKCAYQABiABBiiBDIGCAcQRRg80gEIMjM3OWowajSoAg6wAgHxBXTXzxnrJgZ2&client=ms-android-samsung-a1-terr1-rvo0cqb&sourceid=chrome-mobile&source=chrome.ob&ie=UTF-8#sv=CAESzQEKuQEStgEKd0FERGJXZVlIS19tZGV3amRFRzExV3JfV1FtaTRQenFWbjNEVDVPcnF4cGwxRlRja3BnR1ZvaXhMbkdYWl93RXg2eG9YemFOc1duV0NGN3NhemRub1F3aUxOTTh3TU1DMWFROTctU1J6YTdRZmZPOHNiUlRYaXE4Ehc4YU1IYTZfbU00TGM1T1VQMTR2YjJBMBoiQUhOMEU3RnZhZFVCSmJVaDR5c3hNTFlhLTIxMS1BYUxudxIEODA1MRoBMyoAMAA4AUAAGAAg5ZiA-QtKAhAB',
   },
   seo: {
     title: 'BioClinic Estética Avançada | Harmonização Facial e Corporal em São Luís - MA',

@@ -103,18 +103,29 @@ export const ContactSection: React.FC = () => {
             </div>
           </Reveal>
 
-          {/* Lado Direito — Mapa em dimensões moderadas com interação suave no hover */}
+          {/* Lado Direito — Mapa real e interativo do Google Maps */}
           <Reveal direction="right" delayMs={70} className="lg:col-span-6 lg:self-center">
             <div className="group flex flex-col overflow-hidden rounded-[1.85rem] border border-rosegold/35 bg-blush-50 shadow-card transition-all duration-300 hover:border-rosegold/70 hover:shadow-card-hover">
               <div className="relative h-[230px] overflow-hidden bg-blush-200/50 sm:h-[255px] lg:h-[270px]">
                 <iframe
-                  title={`Localização da ${CLINIC_CONFIG.name} no Google Maps`}
+                  title="Localização da Bio Clínica Avançada no Google Maps"
                   src={CLINIC_CONFIG.contact.mapsEmbedUrl}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                   allowFullScreen
-                  className="h-full w-full border-0 transition-transform duration-500 ease-out group-hover:scale-[1.025]"
+                  className="h-full w-full border-0 transition-transform duration-500 ease-out group-hover:scale-[1.02]"
                 />
+                <a
+                  href={CLINIC_CONFIG.contact.mapsShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Abrir Bio Clínica Avançada diretamente no Google Maps"
+                  className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-rosegold/55 bg-ivory/95 px-3.5 py-1.5 text-[11px] font-semibold text-wine-800 shadow-soft-rose backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-wine-800 hover:text-blush-50"
+                >
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-rosegold-dark" aria-hidden="true" />
+                  <span>Bio Clínica Avançada</span>
+                  <ExternalLink className="h-3 w-3 shrink-0 opacity-80" aria-hidden="true" />
+                </a>
               </div>
               <div className="flex flex-col items-start justify-between gap-3 border-t border-rosegold/25 bg-ivory px-5 py-3.5 sm:flex-row sm:items-center">
                 <p className="text-xs leading-relaxed text-wine-800/80">
@@ -127,7 +138,7 @@ export const ContactSection: React.FC = () => {
                   rel="noopener noreferrer"
                   className="btn-secondary shrink-0 px-4 py-2 text-xs"
                 >
-                  <span>Abrir no Google Maps</span>
+                  <span>Abrir Google Maps</span>
                   <ExternalLink className="h-3.5 w-3.5 text-rosegold-dark" aria-hidden="true" />
                 </a>
               </div>

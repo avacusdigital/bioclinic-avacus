@@ -26,10 +26,16 @@ export const HeroSection: React.FC = () => {
         />
       </picture>
 
-      {/* Gradiente sutil de legibilidade preservando a paleta blush/ivory oficial */}
+      {/* Camada de sombra escura sutil e transparente sobre a imagem para realçar o contraste do Hero */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-ivory/50 via-blush-50/45 to-blush-200/85 md:bg-gradient-to-r md:from-blush-200/95 md:via-blush-100/75 md:to-transparent"
+        className="pointer-events-none absolute inset-0 bg-wine-900/[0.15] md:bg-wine-900/[0.17]"
+      />
+
+      {/* Gradiente equilibrado preservando leitura nítida dos textos/botões e destaque visual do fundo */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 shadow-[inset_0_-28px_40px_-24px_rgba(52,10,10,0.28)] bg-gradient-to-b from-blush-200/45 via-blush-100/25 to-wine-900/20 md:bg-gradient-to-r md:from-blush-200/80 md:via-blush-200/30 md:to-wine-900/25"
       />
 
       {/* Conteúdo principal visível integralmente na primeira dobra */}

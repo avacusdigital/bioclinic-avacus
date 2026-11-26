@@ -42,16 +42,20 @@ export const Footer: React.FC<FooterProps> = ({
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 lg:gap-12">
           {/* ÁREA ESQUERDA — IDENTIDADE DA CLÍNICA */}
           <div className="md:col-span-4">
-            {/* Logo oficial em placa blush #F7E4DE preservando proporção e máximo contraste */}
+            {/* Logo oficial perfeitamente circular preservando qualidade e proporção */}
             <div className="inline-flex items-center gap-4">
-              <div className="overflow-hidden rounded-2xl border border-rosegold/70 bg-blush-200 p-2 shadow-soft-rose">
+              <div
+                style={{ borderRadius: '50%' }}
+                className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-rosegold/80 bg-blush-200 p-1 shadow-soft-rose sm:h-[88px] sm:w-[88px]"
+              >
                 <img
-                  src={CLINIC_CONFIG.logo.src}
+                  src={CLINIC_CONFIG.logo.circleSrc}
                   alt={CLINIC_CONFIG.logo.alt}
-                  width={112}
-                  height={112}
+                  width={88}
+                  height={88}
                   loading="lazy"
-                  className="h-16 w-16 rounded-xl object-contain sm:h-20 sm:w-20"
+                  style={{ borderRadius: '50%' }}
+                  className="h-full w-full rounded-full bg-blush-200 object-contain"
                 />
               </div>
               <div>
