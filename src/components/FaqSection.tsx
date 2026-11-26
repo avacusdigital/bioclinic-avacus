@@ -61,13 +61,13 @@ export const FaqSection: React.FC = () => {
                       aria-expanded={isOpen}
                       aria-controls={panelId}
                       onClick={() => toggleItem(item.id)}
-                      className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors sm:px-6 sm:py-5"
+                      className="group flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors sm:px-6 sm:py-5"
                     >
                       <span className="flex items-baseline gap-3">
                         <span className="font-serif text-base font-semibold text-rosegold-dark sm:text-lg">
                           0{idx + 1}.
                         </span>
-                        <span className="font-serif text-lg font-semibold leading-snug text-wine-800 sm:text-xl">
+                        <span className="font-serif text-lg font-semibold leading-snug text-wine-800 transition-colors duration-200 group-hover:text-wine-700 sm:text-xl">
                           {item.question}
                         </span>
                       </span>
@@ -75,7 +75,7 @@ export const FaqSection: React.FC = () => {
                         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300 sm:h-9 sm:w-9 ${
                           isOpen
                             ? 'rotate-180 border-wine-800 bg-wine-800 text-blush-50'
-                            : 'border-rosegold/45 bg-blush-50 text-wine-800'
+                            : 'border-rosegold/45 bg-blush-50 text-wine-800 group-hover:scale-105 group-hover:border-wine-800/45 group-hover:bg-blush-200/75'
                         }`}
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />

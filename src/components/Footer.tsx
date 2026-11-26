@@ -39,7 +39,7 @@ export const Footer: React.FC<FooterProps> = ({
 
       <div className="mx-auto max-w-7xl px-4 pb-8 pt-12 sm:px-6 lg:px-8">
         {/* Três áreas principais equilibradas */}
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 lg:gap-12">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 lg:gap-8">
           {/* ÁREA ESQUERDA — IDENTIDADE DA CLÍNICA */}
           <div className="md:col-span-4">
             {/* Logo oficial perfeitamente circular preservando qualidade e proporção */}
@@ -133,9 +133,9 @@ export const Footer: React.FC<FooterProps> = ({
                     href={CLINIC_CONFIG.contact.whatsappBaseUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2.5 transition-colors hover:text-ivory"
+                    className="group inline-flex items-center gap-2.5 transition-colors hover:text-ivory"
                   >
-                    <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" />
+                    <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366] transition-transform duration-300 group-hover:scale-110" />
                     <span>
                       <strong className="font-medium text-rosegold-light">WhatsApp:</strong>{' '}
                       {CLINIC_CONFIG.contact.whatsappDisplay}
@@ -145,10 +145,13 @@ export const Footer: React.FC<FooterProps> = ({
                 <li>
                   <a
                     href={`mailto:${CLINIC_CONFIG.contact.email}`}
-                    className="inline-flex items-center gap-2.5 transition-colors hover:text-ivory"
+                    className="group inline-flex max-w-full items-center gap-2.5 transition-colors hover:text-ivory"
                   >
-                    <Mail className="h-4 w-4 shrink-0 text-rosegold-light" aria-hidden="true" />
-                    <span className="break-all sm:break-normal">
+                    <Mail
+                      className="h-4 w-4 shrink-0 text-rosegold-light transition-transform duration-300 group-hover:scale-110"
+                      aria-hidden="true"
+                    />
+                    <span className="break-words text-[12.5px] sm:text-[13px] lg:whitespace-nowrap xl:text-sm">
                       <strong className="font-medium text-rosegold-light">E-mail:</strong>{' '}
                       {CLINIC_CONFIG.contact.email}
                     </span>

@@ -20,8 +20,8 @@ export const ReviewsSection: React.FC = () => {
         <Reveal direction="scale">
           <div className="overflow-hidden rounded-[2rem] border border-rosegold/35 bg-ivory p-8 text-center shadow-editorial sm:p-11 lg:p-12">
             <div className="mx-auto flex flex-col items-center">
-              <div className="inline-flex items-center gap-3 rounded-full border border-rosegold/25 bg-blush-50 px-5 py-2.5 shadow-sm">
-                <GoogleGIcon className="h-6 w-6" />
+              <div className="group/badge inline-flex items-center gap-3 rounded-full border border-rosegold/25 bg-blush-50 px-5 py-2.5 shadow-sm transition-shadow duration-300 hover:shadow-soft-rose">
+                <GoogleGIcon className="h-6 w-6 transition-transform duration-300 group-hover/badge:scale-105" />
                 <div
                   className="flex items-center gap-1"
                   aria-label="Cinco estrelas douradas decorativas"
@@ -29,13 +29,14 @@ export const ReviewsSection: React.FC = () => {
                   {[0, 1, 2, 3, 4].map((star) => (
                     <Star
                       key={star}
-                      className="h-4 w-4 fill-[#F4B400] text-[#F4B400]"
+                      style={{ transitionDelay: `${star * 35}ms` }}
+                      className="h-4 w-4 fill-[#F4B400] text-[#F4B400] transition-transform duration-300 group-hover/badge:scale-110"
                       aria-hidden="true"
                     />
                   ))}
                 </div>
                 <MessageSquareHeart
-                  className="h-4 w-4 text-rosegold-dark"
+                  className="h-4 w-4 text-rosegold-dark transition-transform duration-300 group-hover/badge:scale-110"
                   aria-hidden="true"
                 />
               </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarHeart, MapPin, UserCheck } from 'lucide-react';
+import { CalendarHeart, MapPin } from 'lucide-react';
 import { CLINIC_CONFIG } from '../config/clinic';
 import { WhatsAppIcon } from './BrandIcons';
 import { scrollToSectionId } from './Header';
@@ -73,9 +73,12 @@ export const HeroSection: React.FC = () => {
                   e.preventDefault();
                   scrollToSectionId('agendamento');
                 }}
-                className="btn-primary w-full sm:w-auto"
+                className="group btn-primary w-full sm:w-auto"
               >
-                <CalendarHeart className="h-4 w-4" aria-hidden="true" />
+                <CalendarHeart
+                  className="h-4 w-4 transition-transform duration-300 group-hover:scale-110"
+                  aria-hidden="true"
+                />
                 <span>Agendar atendimento</span>
               </a>
 
@@ -83,9 +86,9 @@ export const HeroSection: React.FC = () => {
                 href={CLINIC_CONFIG.contact.whatsappBaseUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-secondary w-full border-wine-800/30 bg-ivory/95 sm:w-auto"
+                className="group btn-secondary w-full border-wine-800/30 bg-ivory/95 sm:w-auto"
               >
-                <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+                <WhatsAppIcon className="h-4 w-4 text-[#25D366] transition-transform duration-300 group-hover:scale-110" />
                 <span>Falar pelo WhatsApp</span>
               </a>
             </div>
@@ -94,9 +97,20 @@ export const HeroSection: React.FC = () => {
           {/* Identificação concisa da profissional e localização dentro da primeira dobra */}
           <Reveal direction="up" delayMs={300}>
             <div className="mt-8 inline-flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-2xl border border-rosegold/35 bg-ivory/85 px-5 py-3.5 shadow-soft-rose backdrop-blur-md">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blush-200 text-wine-800">
-                  <UserCheck className="h-4 w-4" aria-hidden="true" />
+              <div className="flex items-center gap-3">
+                <span
+                  style={{ borderRadius: '50%' }}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-rosegold/65 bg-blush-200 shadow-sm transition-transform duration-300 hover:scale-105"
+                >
+                  <img
+                    src={CLINIC_CONFIG.professional.photo}
+                    alt={CLINIC_CONFIG.professional.name}
+                    width={40}
+                    height={40}
+                    loading="eager"
+                    style={{ borderRadius: '50%' }}
+                    className="h-full w-full rounded-full object-cover object-top"
+                  />
                 </span>
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-rosegold-dark">
