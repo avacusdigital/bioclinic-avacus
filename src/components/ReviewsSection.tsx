@@ -44,15 +44,15 @@ export const ReviewsSection: React.FC = () => {
                 id="avaliacoes-heading"
                 className="mt-5 font-serif text-3xl font-semibold text-wine-800 sm:text-4xl lg:text-5xl"
               >
-                Avaliações
+                Avalie a gente no Google
               </h2>
 
               <div aria-hidden="true" className="mt-3.5 h-[2px] w-16 rounded-full bg-rosegold" />
 
               <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-wine-800/80 sm:text-base">
-                Sua opinião é muito importante para a {CLINIC_CONFIG.name}. Se você já viveu a
+                Sua opinião é muito importante para a Bio Clínica Avançada. Se você já viveu a
                 experiência de atendimento conosco, compartilhe sua avaliação no Google e ajude
-                outras pessoas a conhecerem nosso cuidado.
+                outras pessoas a conhecerem o nosso cuidado.
               </p>
 
               <div className="mt-7">

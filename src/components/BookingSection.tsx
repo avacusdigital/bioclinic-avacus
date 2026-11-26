@@ -19,12 +19,13 @@ import {
 import { CLINIC_CONFIG, SERVICES, ServiceItem } from '../config/clinic';
 import {
   BookingData,
+  TimeSlotOption,
   buildWhatsAppBookingUrl,
   formatBrazilPhone,
   formatDisplayDatePtBr,
   formatIsoDate,
   formatShortDatePtBr,
-  getAvailableTimeSlots,
+  getDayTimeSlotsWithStatus,
   getTodayMidnight,
   isBlockedDate,
   isDateSelectable,
@@ -32,6 +33,9 @@ import {
   isSundayDate,
   isValidBrazilPhone,
   isValidEmail,
+  loadSavedPersonalData,
+  savePersonalData,
+  validateCustomTimeSlot,
 } from '../utils/schedule';
 import { WhatsAppIcon } from './BrandIcons';
 import { Reveal } from './Reveal';
@@ -43,11 +47,11 @@ interface BookingSectionProps {
 }
 
 const STEPS = [
-  { number: 1, title: 'Dados Pessoais', short: 'Dados' },
+  { number: 1, title: 'Dados', short: 'Dados' },
   { number: 2, title: 'Procedimento', short: 'Procedimento' },
   { number: 3, title: 'Data', short: 'Data' },
   { number: 4, title: 'Horário', short: 'Horário' },
-  { number: 5, title: 'Revisão e Envio', short: 'Revisão' },
+  { number: 5, title: 'Revisão', short: 'Revisão' },
 ] as const;
 
 const WEEKDAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -61,9 +65,21 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [restoredPersonalData, setRestoredPersonalData] = useState(false);
+
   const [serviceId, setServiceId] = useState('');
   const [dateIso, setDateIso] = useState('');
   const [timeSlot, setTimeSlot] = useState('');
+
+  // Estado do Horário personalizado
+  const [useCustomTime, setUseCustomTime] = useState(false);
+  const [customTimeInput, setCustomTimeInput] = useState('');
+  const [customTimeStatus, setCustomTimeStatus] = useState<{
+    checked: boolean;
+    valid: boolean;
+    message: string;
+  }>({ checked: false, valid: false, message: '' });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [preselectNotice, setPreselectNotice] = useState<string>('');
   const [submittedNotice, setSubmittedNotice] = useState(false);
@@ -72,6 +88,17 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
   });
+
+  // 6.4. Reaproveitamento automático dos dados pessoais salvos no navegador
+  useEffect(() => {
+    const saved = loadSavedPersonalData();
+    if (saved) {
+      if (saved.name) setName(saved.name);
+      if (saved.email) setEmail(saved.email);
+      if (saved.phone) setPhone(formatBrazilPhone(saved.phone));
+      setRestoredPersonalData(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!preselectedService || preselectNonce === 0) return;
@@ -96,13 +123,52 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     [serviceId],
   );
 
-  const availableSlots = useMemo(() => getAvailableTimeSlots(dateIso), [dateIso]);
+  const daySlotOptions = useMemo(() => getDayTimeSlotsWithStatus(dateIso), [dateIso]);
+  const hasAnyAvailableSlot = useMemo(
+    () => daySlotOptions.some((s) => s.available),
+    [daySlotOptions],
+  );
 
+  // Ao mudar a data, valida novamente o horário escolhido (padrão ou personalizado)
   useEffect(() => {
-    if (timeSlot && !availableSlots.includes(timeSlot)) {
+    if (!dateIso) {
       setTimeSlot('');
+      setCustomTimeStatus({ checked: false, valid: false, message: '' });
+      return;
     }
-  }, [availableSlots, timeSlot]);
+
+    if (useCustomTime) {
+      if (customTimeInput) {
+        const res = validateCustomTimeSlot(dateIso, customTimeInput);
+        if (res.valid && res.normalized) {
+          setTimeSlot(res.normalized);
+          setCustomTimeStatus({
+            checked: true,
+            valid: true,
+            message: `Horário personalizado disponível: ${res.normalized}.`,
+          });
+        } else {
+          setTimeSlot('');
+          setCustomTimeStatus({
+            checked: true,
+            valid: false,
+            message: res.error || 'O horário escolhido não está disponível.',
+          });
+        }
+      } else {
+        setTimeSlot('');
+        setCustomTimeStatus({ checked: false, valid: false, message: '' });
+      }
+      return;
+    }
+
+    if (timeSlot) {
+      const found = daySlotOptions.find((s) => s.time === timeSlot && s.available);
+      if (!found) {
+        setTimeSlot('');
+      }
+    }
+  }, [dateIso, daySlotOptions, useCustomTime]);
 
   const facialServices = useMemo(() => SERVICES.filter((s) => s.category === 'facial'), []);
   const corporalServices = useMemo(() => SERVICES.filter((s) => s.category === 'corporal'), []);
@@ -144,6 +210,12 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     setCalendarMonth({ year: nextDate.getFullYear(), month: nextDate.getMonth() });
   };
 
+  const persistPersonalFieldsIfValid = () => {
+    if (name.trim().length >= 3 && isValidEmail(email) && isValidBrazilPhone(phone)) {
+      savePersonalData({ name, email, phone });
+    }
+  };
+
   const validateStep = (targetStep: number): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -172,8 +244,31 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     }
 
     if (targetStep === 4) {
-      if (!timeSlot) {
-        newErrors.time = 'Selecione um dos horários disponíveis para o dia escolhido.';
+      if (useCustomTime) {
+        const res = validateCustomTimeSlot(dateIso, customTimeInput);
+        if (!res.valid || !res.normalized) {
+          newErrors.time =
+            res.error || 'O horário escolhido não está disponível. Informe outro horário.';
+          setCustomTimeStatus({
+            checked: true,
+            valid: false,
+            message: newErrors.time,
+          });
+        } else {
+          setTimeSlot(res.normalized);
+          setCustomTimeStatus({
+            checked: true,
+            valid: true,
+            message: `Horário personalizado disponível: ${res.normalized}.`,
+          });
+        }
+      } else if (!timeSlot) {
+        newErrors.time = 'Selecione um horário disponível ou utilize a opção Horário personalizado.';
+      } else {
+        const slotObj = daySlotOptions.find((s) => s.time === timeSlot);
+        if (slotObj && !slotObj.available) {
+          newErrors.time = 'O horário escolhido não está disponível. Selecione outro horário.';
+        }
       }
     }
 
@@ -183,6 +278,9 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
 
   const handleNext = () => {
     if (!validateStep(step)) return;
+    if (step === 1) {
+      persistPersonalFieldsIfValid();
+    }
     setStep((prev) => Math.min(5, prev + 1));
   };
 
@@ -199,6 +297,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     }
     for (let s = step; s < targetStep; s++) {
       if (!validateStep(s)) return;
+      if (s === 1) persistPersonalFieldsIfValid();
     }
     setStep(targetStep);
   };
@@ -224,13 +323,78 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     });
   };
 
-  const handleSelectTime = (slot: string) => {
-    setTimeSlot(slot);
+  const handleSelectStandardTime = (slot: TimeSlotOption) => {
+    if (!slot.available) return;
+    setUseCustomTime(false);
+    setCustomTimeStatus({ checked: false, valid: false, message: '' });
+    setTimeSlot(slot.time);
     setErrors((prev) => {
       const next = { ...prev };
       delete next.time;
       return next;
     });
+  };
+
+  const handleToggleCustomTime = () => {
+    setUseCustomTime(true);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.time;
+      return next;
+    });
+    if (customTimeInput) {
+      const res = validateCustomTimeSlot(dateIso, customTimeInput);
+      if (res.valid && res.normalized) {
+        setTimeSlot(res.normalized);
+        setCustomTimeStatus({
+          checked: true,
+          valid: true,
+          message: `Horário personalizado disponível: ${res.normalized}.`,
+        });
+      } else {
+        setTimeSlot('');
+        setCustomTimeStatus({
+          checked: true,
+          valid: false,
+          message: res.error || 'O horário escolhido não está disponível.',
+        });
+      }
+    } else {
+      setTimeSlot('');
+      setCustomTimeStatus({ checked: false, valid: false, message: '' });
+    }
+  };
+
+  const handleCustomTimeChange = (val: string) => {
+    setCustomTimeInput(val);
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.time;
+      return next;
+    });
+
+    if (!val.trim()) {
+      setTimeSlot('');
+      setCustomTimeStatus({ checked: false, valid: false, message: '' });
+      return;
+    }
+
+    const res = validateCustomTimeSlot(dateIso, val);
+    if (res.valid && res.normalized) {
+      setTimeSlot(res.normalized);
+      setCustomTimeStatus({
+        checked: true,
+        valid: true,
+        message: `Horário personalizado disponível: ${res.normalized}.`,
+      });
+    } else {
+      setTimeSlot('');
+      setCustomTimeStatus({
+        checked: true,
+        valid: false,
+        message: res.error || 'O horário escolhido não está disponível.',
+      });
+    }
   };
 
   const handleConfirmWhatsApp = () => {
@@ -252,6 +416,8 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     }
     if (!selectedService) return;
 
+    persistPersonalFieldsIfValid();
+
     const payload: BookingData = {
       name,
       email,
@@ -267,18 +433,23 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // 6.7. Divisão oficial nos 4 turnos: Manhã, Tarde, Final da tarde, Noite
   const groupedSlots = useMemo(() => {
-    const morning: string[] = [];
-    const afternoon: string[] = [];
-    const evening: string[] = [];
-    availableSlots.forEach((slot) => {
-      const hour = Number(slot.split(':')[0]);
+    const morning: TimeSlotOption[] = [];
+    const afternoon: TimeSlotOption[] = [];
+    const lateAfternoon: TimeSlotOption[] = [];
+    const night: TimeSlotOption[] = [];
+
+    daySlotOptions.forEach((slot) => {
+      const hour = Number(slot.time.split(':')[0]);
       if (hour < 12) morning.push(slot);
-      else if (hour < 18) afternoon.push(slot);
-      else evening.push(slot);
+      else if (hour < 17) afternoon.push(slot);
+      else if (hour < 18) lateAfternoon.push(slot);
+      else night.push(slot);
     });
-    return { morning, afternoon, evening };
-  }, [availableSlots]);
+
+    return { morning, afternoon, lateAfternoon, night };
+  }, [daySlotOptions]);
 
   const selectedDaySchedule = useMemo(() => {
     if (!dateIso) return null;
@@ -294,11 +465,11 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
       className="relative scroll-mt-16 overflow-hidden surface-nude-radial py-10 sm:py-12 lg:py-14"
     >
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        {/* Cabeçalho compacto no topo da seção */}
+        {/* 6.1. Apresentação */}
         <div className="mx-auto max-w-2xl text-center">
           <Reveal direction="up">
             <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-rosegold-dark">
-              Reserve seu Momento
+              Reserve seu momento
             </span>
             <h2
               id="agendamento-heading"
@@ -307,7 +478,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
               Agendamento
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-wine-800/75">
-              Preencha as etapas abaixo para montar sua solicitação de agendamento e enviá-la
+              Preencha as etapas abaixo para montar sua solicitação de agendamento e envie
               diretamente ao nosso WhatsApp.
             </p>
           </Reveal>
@@ -316,7 +487,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
         {/* Container interativo refinado */}
         <Reveal direction="up" delayMs={80}>
           <div className="mt-7 overflow-hidden rounded-[2rem] border border-rosegold/40 bg-ivory shadow-editorial">
-            {/* Cabeçalho de Etapas + Progresso */}
+            {/* Cabeçalho de 5 Etapas */}
             <div className="border-b border-rosegold/25 bg-gradient-to-r from-blush-50 via-blush-100/75 to-blush-50 px-4 py-4 sm:px-8">
               <ol aria-label="Etapas do agendamento" className="grid grid-cols-5 gap-2 sm:gap-4">
                 {STEPS.map((s) => {
@@ -350,8 +521,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                                 : 'text-wine-800/55'
                           }`}
                         >
-                          <span className="hidden sm:inline">{s.title}</span>
-                          <span className="sm:hidden">{s.short}</span>
+                          {s.title}
                         </span>
                       </button>
                     </li>
@@ -387,7 +557,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
 
             {/* Conteúdo da Etapa Ativa */}
             <div className="p-5 sm:p-7 lg:p-8">
-              {/* ETAPA 01 — DADOS PESSOAIS */}
+              {/* ETAPA 01 — DADOS */}
               {step === 1 && (
                 <div key="step-1" className="animate-step-in">
                   <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
@@ -407,13 +577,30 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                     )}
                   </div>
 
+                  {restoredPersonalData && (
+                    <div className="mb-4 flex items-center justify-between gap-2 rounded-2xl border border-rosegold/30 bg-blush-100/75 px-4 py-2.5 text-xs text-wine-800/85">
+                      <span>
+                        Seus dados preenchidos anteriormente foram recuperados automaticamente neste
+                        navegador. Você pode editá-los normalmente.
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setRestoredPersonalData(false)}
+                        aria-label="Dispensar aviso"
+                        className="shrink-0 rounded-full p-1 text-wine-800/60 hover:bg-ivory/70"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <label
                         htmlFor="booking-name"
                         className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-wine-800"
                       >
-                        Nome completo *
+                        Nome *
                       </label>
                       <div className="relative">
                         <User
@@ -489,7 +676,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                         htmlFor="booking-phone"
                         className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-wine-800"
                       >
-                        Telefone / WhatsApp *
+                        Telefone *
                       </label>
                       <div className="relative">
                         <Phone
@@ -818,14 +1005,14 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                     </div>
                   )}
 
-                  {availableSlots.length === 0 ? (
+                  {daySlotOptions.length === 0 ? (
                     <div className="rounded-3xl border border-rosegold/35 bg-blush-100/75 p-7 text-center">
                       <Clock className="mx-auto h-8 w-8 text-rosegold-dark" aria-hidden="true" />
                       <p className="mt-3 font-serif text-2xl font-semibold text-wine-800">
-                        Não há mais horários disponíveis para hoje
+                        Não há horários disponíveis para esta data
                       </p>
                       <p className="mt-1.5 text-sm text-wine-800/75">
-                        Volte à etapa anterior e selecione a próxima data disponível.
+                        Volte à etapa anterior e selecione outra data disponível.
                       </p>
                       <button
                         type="button"
@@ -837,10 +1024,28 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                     </div>
                   ) : (
                     <div className="space-y-5">
+                      {!hasAnyAvailableSlot && (
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rosegold/40 bg-blush-100/80 px-4 py-3 text-xs text-wine-800">
+                          <span>
+                            Todos os horários de hoje já passaram. Selecione outra data no
+                            calendário.
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setStep(3)}
+                            className="font-semibold underline underline-offset-2 hover:text-wine-700"
+                          >
+                            Alterar data
+                          </button>
+                        </div>
+                      )}
+
+                      {/* 4 turnos oficiais: Manhã, Tarde, Final da tarde, Noite */}
                       {[
                         { label: 'Manhã', slots: groupedSlots.morning },
                         { label: 'Tarde', slots: groupedSlots.afternoon },
-                        { label: 'Final de tarde / Noite', slots: groupedSlots.evening },
+                        { label: 'Final da tarde', slots: groupedSlots.lateAfternoon },
+                        { label: 'Noite', slots: groupedSlots.night },
                       ]
                         .filter((g) => g.slots.length > 0)
                         .map((group) => (
@@ -850,26 +1055,140 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                             </p>
                             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-5 md:grid-cols-6">
                               {group.slots.map((slot) => {
-                                const selected = timeSlot === slot;
+                                const selected = !useCustomTime && timeSlot === slot.time;
                                 return (
                                   <button
-                                    key={slot}
+                                    key={slot.time}
                                     type="button"
-                                    onClick={() => handleSelectTime(slot)}
+                                    disabled={!slot.available}
+                                    onClick={() => handleSelectStandardTime(slot)}
                                     aria-pressed={selected}
-                                    className={`rounded-2xl border py-2.5 text-center text-sm font-semibold transition-all duration-250 active:scale-95 ${
-                                      selected
-                                        ? 'scale-105 border-wine-800 bg-wine-800 text-blush-50 shadow-soft-rose ring-2 ring-rosegold/50'
-                                        : 'border-rosegold/35 bg-blush-50/80 text-wine-800 hover:-translate-y-0.5 hover:border-wine-800/45 hover:bg-blush-200/80'
+                                    aria-label={
+                                      slot.available
+                                        ? `Horário ${slot.time} disponível`
+                                        : `Horário ${slot.time} indisponível`
+                                    }
+                                    className={`relative flex items-center justify-center gap-1 rounded-2xl border py-2.5 text-center text-sm font-semibold transition-all duration-200 ${
+                                      !slot.available
+                                        ? 'cursor-not-allowed border-red-200 bg-red-50/85 text-red-500/85'
+                                        : selected
+                                          ? 'scale-105 border-wine-800 bg-wine-800 text-blush-50 shadow-soft-rose ring-2 ring-rosegold/50'
+                                          : 'border-rosegold/35 bg-blush-50/80 text-wine-800 hover:-translate-y-0.5 hover:border-wine-800/45 hover:bg-blush-200/80 active:scale-95'
                                     }`}
                                   >
-                                    {slot}
+                                    <span>{slot.time}</span>
+                                    {!slot.available && (
+                                      <X
+                                        className="h-3.5 w-3.5 shrink-0 text-red-500"
+                                        aria-hidden="true"
+                                      />
+                                    )}
                                   </button>
                                 );
                               })}
                             </div>
                           </div>
                         ))}
+
+                      {/* Legenda de horários disponíveis / indisponíveis com X */}
+                      <div className="flex flex-wrap items-center gap-4 text-[11px] text-wine-800/75">
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-full border border-rosegold/45 bg-blush-50" />
+                          Disponível
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 text-red-700">
+                          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-red-200 bg-red-50">
+                            <X className="h-2.5 w-2.5 text-red-500" />
+                          </span>
+                          Indisponível
+                        </span>
+                      </div>
+
+                      {/* Opção: Horário personalizado */}
+                      <div
+                        className={`rounded-3xl border p-4 transition-all duration-300 sm:p-5 ${
+                          useCustomTime
+                            ? 'border-wine-800/50 bg-blush-100/80 shadow-soft-rose'
+                            : 'border-rosegold/35 bg-blush-50/75'
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blush-200 text-wine-800">
+                              <Clock className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                            <div>
+                              <p className="text-sm font-semibold text-wine-800">
+                                Horário personalizado
+                              </p>
+                              <p className="text-xs text-wine-800/70">
+                                Precisa de um horário diferente dos horários padrão? Informe
+                                manualmente abaixo.
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleToggleCustomTime}
+                            aria-pressed={useCustomTime}
+                            className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                              useCustomTime
+                                ? 'bg-wine-800 text-blush-50 shadow-sm'
+                                : 'border border-rosegold/55 bg-ivory text-wine-800 hover:bg-blush-200/70'
+                            }`}
+                          >
+                            {useCustomTime ? 'Horário personalizado ativo' : 'Horário personalizado'}
+                          </button>
+                        </div>
+
+                        {useCustomTime && (
+                          <div className="animate-step-in mt-4 border-t border-rosegold/25 pt-4">
+                            <label
+                              htmlFor="custom-time-input"
+                              className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-wine-800"
+                            >
+                              Informe o horário desejado (HH:mm)
+                            </label>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                              <input
+                                id="custom-time-input"
+                                type="time"
+                                value={customTimeInput}
+                                onChange={(e) => handleCustomTimeChange(e.target.value)}
+                                className="w-full rounded-2xl border border-rosegold/45 bg-ivory px-4 py-2.5 text-sm font-semibold text-wine-800 focus:border-wine-800/55 focus:outline-none focus:ring-2 focus:ring-blush-200 sm:max-w-[200px]"
+                              />
+                              <span className="text-xs text-wine-800/70">
+                                Expediente neste dia: {selectedDaySchedule?.label}
+                              </span>
+                            </div>
+
+                            {customTimeStatus.checked && (
+                              <p
+                                role="status"
+                                className={`mt-2.5 flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-medium ${
+                                  customTimeStatus.valid
+                                    ? 'border border-rosegold/40 bg-ivory text-wine-800'
+                                    : 'border border-red-200 bg-red-50 text-red-700'
+                                }`}
+                              >
+                                {customTimeStatus.valid ? (
+                                  <CheckCircle2
+                                    className="h-4 w-4 shrink-0 text-wine-800"
+                                    aria-hidden="true"
+                                  />
+                                ) : (
+                                  <AlertCircle
+                                    className="h-4 w-4 shrink-0 text-red-600"
+                                    aria-hidden="true"
+                                  />
+                                )}
+                                <span>{customTimeStatus.message}</span>
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
                       <p className="text-xs text-wine-800/65">
                         Os horários seguem o expediente da clínica e a confirmação final é realizada
@@ -880,7 +1199,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                 </div>
               )}
 
-              {/* ETAPA 05 — REVISÃO E ENVIO */}
+              {/* ETAPA 05 — REVISÃO */}
               {step === 5 && (
                 <div key="step-5" className="animate-step-in">
                   <div className="mb-5">
@@ -921,7 +1240,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
 
                       <div className="rounded-2xl border border-rosegold/25 bg-ivory p-3.5">
                         <dt className="text-[10px] font-semibold uppercase tracking-[0.16em] text-rosegold-dark">
-                          Telefone / WhatsApp
+                          Telefone
                         </dt>
                         <dd className="mt-1 text-sm font-semibold text-wine-800">{phone}</dd>
                       </div>
@@ -996,8 +1315,7 @@ export const BookingSection: React.FC<BookingSectionProps> = ({
                         <CheckCircle2 className="h-4 w-4 shrink-0 text-wine-800" />
                         <span>
                           Sua solicitação foi preparada e aberta no WhatsApp. Caso a janela não
-                          tenha aberto automaticamente, clique novamente em &ldquo;Agendar
-                          agora&rdquo;.
+                          tenha aberto automaticamente, clique novamente em Agendar agora.
                         </span>
                       </div>
                     )}

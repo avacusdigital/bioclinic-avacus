@@ -4,7 +4,8 @@
 
 @layer base {
   :root {
-    color-scheme: light only;
+    color-scheme: only light !important;
+    forced-color-adjust: none;
     --bio-blush: #f7e4de;
     --bio-blush-soft: #faf0ec;
     --bio-blush-tint: #fdf8f6;
@@ -20,7 +21,8 @@
   }
 
   html {
-    color-scheme: light only;
+    color-scheme: only light !important;
+    forced-color-adjust: none;
     scroll-behavior: smooth;
     scroll-padding-top: var(--header-offset);
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -31,9 +33,41 @@
   }
 
   body {
+    color-scheme: only light !important;
+    forced-color-adjust: none;
     overflow-x: clip;
     background-color: var(--bio-ivory);
     color: var(--bio-wine);
+  }
+
+  /* Bloqueio definitivo contra inversão automática de cores em desktops/notebooks com tema escuro */
+  @media (prefers-color-scheme: dark) {
+    :root,
+    html,
+    body {
+      color-scheme: only light !important;
+      forced-color-adjust: none;
+      --bio-blush: #f7e4de;
+      --bio-blush-soft: #faf0ec;
+      --bio-blush-tint: #fdf8f6;
+      --bio-ivory: #fffdfb;
+      --bio-rosegold-light: #e4c2b4;
+      --bio-rosegold: #c79282;
+      --bio-rosegold-dark: #9e6657;
+      --bio-wine: #4a1010;
+      --bio-wine-hover: #5e1818;
+      --bio-wine-deep: #340a0a;
+      background-color: #fffdfb !important;
+      color: #4a1010 !important;
+    }
+  }
+
+  @media (forced-colors: active) {
+    :root,
+    html,
+    body {
+      forced-color-adjust: none;
+    }
   }
 
   h1,

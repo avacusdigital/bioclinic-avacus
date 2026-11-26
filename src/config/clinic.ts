@@ -42,7 +42,7 @@ export interface DaySchedule {
  * Altere dados de contato, URLs, horários, serviços e textos institucionais em um único lugar.
  */
 export const CLINIC_CONFIG = {
-  siteUrl: 'https://bioclinicesteticaavancada.com.br', // Atualize com o domínio final no deploy
+  siteUrl: 'https://bioclinic-producao.vercel.app', // URL pública oficial em produção na Vercel
   name: 'BioClinic Estética Avançada',
   shortName: 'BioClinic',
   tagline: 'Beleza em harmonia, cuidado em cada detalhe.',
@@ -128,6 +128,10 @@ export const CLINIC_CONFIG = {
     maxMonthsAhead: 3,
     /** Datas excepcionalmente indisponíveis no formato YYYY-MM-DD (ex.: feriados) */
     blockedDates: [] as string[],
+    /** Horários indisponíveis por data específica no formato { 'YYYY-MM-DD': ['10:00', '14:30'] } */
+    unavailableSlotsByDate: {} as Record<string, string[]>,
+    /** Horários recorrentemente indisponíveis por dia da semana (0=Dom..6=Sáb) */
+    unavailableSlotsWeekly: {} as Record<number, string[]>,
     /** Dias da semana: 0 = Domingo ... 6 = Sábado */
     weeklyHours: {
       0: { open: false, start: '', end: '', label: 'Fechado' },
@@ -151,7 +155,7 @@ export const NAV_LINKS = [
   { id: 'servicos', label: 'Serviços' },
   { id: 'sobre', label: 'Sobre a Clínica' },
   { id: 'antes-e-depois', label: 'Antes e Depois' },
-  { id: 'avaliacoes', label: 'Avaliações' },
+  { id: 'avaliacoes', label: 'Avalie a gente' },
   { id: 'agendamento', label: 'Agendamento' },
   { id: 'contato', label: 'Contato' },
   { id: 'faq', label: 'FAQ' },

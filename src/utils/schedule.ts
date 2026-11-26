@@ -10,6 +10,58 @@ export interface BookingData {
   timeSlot: string; // HH:mm
 }
 
+export interface SavedPersonalData {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface TimeSlotOption {
+  time: string;
+  available: boolean;
+  reason?: 'past' | 'unavailable';
+}
+
+export interface CustomTimeValidation {
+  valid: boolean;
+  normalized?: string;
+  error?: string;
+}
+
+const PERSONAL_DATA_STORAGE_KEY = 'bioclinic_booking_personal_v1';
+
+export function loadSavedPersonalData(): SavedPersonalData | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(PERSONAL_DATA_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SavedPersonalData>;
+    const name = typeof parsed.name === 'string' ? parsed.name : '';
+    const email = typeof parsed.email === 'string' ? parsed.email : '';
+    const phone = typeof parsed.phone === 'string' ? parsed.phone : '';
+    if (!name && !email && !phone) return null;
+    return { name, email, phone };
+  } catch {
+    return null;
+  }
+}
+
+export function savePersonalData(data: SavedPersonalData): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      PERSONAL_DATA_STORAGE_KEY,
+      JSON.stringify({
+        name: data.name.trim(),
+        email: data.email.trim(),
+        phone: data.phone.trim(),
+      }),
+    );
+  } catch {
+    // Armazenamento indisponível em modo restrito
+  }
+}
+
 export function formatIsoDate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -61,16 +113,25 @@ function formatMinutes(total: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+function getConfiguredUnavailableSlots(dateIso: string, dayOfWeek: number): Set<string> {
+  const byDate =
+    (CLINIC_CONFIG.schedule.unavailableSlotsByDate as Record<string, string[]>)[dateIso] ?? [];
+  const weekly =
+    (CLINIC_CONFIG.schedule.unavailableSlotsWeekly as Record<number, string[]>)[dayOfWeek] ?? [];
+  return new Set([...byDate, ...weekly]);
+}
+
 /**
- * Gera os horários disponíveis para uma data com base na configuração central.
- * Respeita rigorosamente abertura, fechamento, domingos fechados e horário atual se for hoje.
+ * Retorna todos os horários padrão do expediente do dia, identificando claramente
+ * os horários disponíveis e os indisponíveis (passados ou bloqueados) para exibição com X.
  */
-export function getAvailableTimeSlots(dateIso: string): string[] {
+export function getDayTimeSlotsWithStatus(dateIso: string): TimeSlotOption[] {
   if (!dateIso) return [];
   const date = parseIsoDate(dateIso);
   if (!isDateSelectable(date)) return [];
 
-  const dayConfig = CLINIC_CONFIG.schedule.weeklyHours[date.getDay()];
+  const dayOfWeek = date.getDay();
+  const dayConfig = CLINIC_CONFIG.schedule.weeklyHours[dayOfWeek];
   if (!dayConfig || !dayConfig.open || !dayConfig.start || !dayConfig.end) {
     return [];
   }
@@ -82,16 +143,101 @@ export function getAvailableTimeSlots(dateIso: string): string[] {
   const now = new Date();
   const isToday = formatIsoDate(now) === dateIso;
   const currentMinutesWithBuffer = now.getHours() * 60 + now.getMinutes() + 30;
+  const configuredBlocked = getConfiguredUnavailableSlots(dateIso, dayOfWeek);
 
-  const slots: string[] = [];
+  const slots: TimeSlotOption[] = [];
   for (let t = startMin; t <= endMin; t += interval) {
-    if (isToday && t < currentMinutesWithBuffer) {
-      continue;
+    const label = formatMinutes(t);
+    if (configuredBlocked.has(label)) {
+      slots.push({ time: label, available: false, reason: 'unavailable' });
+    } else if (isToday && t < currentMinutesWithBuffer) {
+      slots.push({ time: label, available: false, reason: 'past' });
+    } else {
+      slots.push({ time: label, available: true });
     }
-    slots.push(formatMinutes(t));
   }
 
   return slots;
+}
+
+/**
+ * Retorna somente a lista de horários disponíveis (compatível com verificações simples).
+ */
+export function getAvailableTimeSlots(dateIso: string): string[] {
+  return getDayTimeSlotsWithStatus(dateIso)
+    .filter((s) => s.available)
+    .map((s) => s.time);
+}
+
+/**
+ * Valida um horário personalizado informado manualmente pelo visitante.
+ * Impede horários fora do expediente, horários passados e qualquer horário identificado com X (indisponível).
+ */
+export function validateCustomTimeSlot(dateIso: string, rawTime: string): CustomTimeValidation {
+  if (!dateIso) {
+    return { valid: false, error: 'Selecione uma data antes de informar um horário.' };
+  }
+
+  const cleaned = rawTime.trim();
+  const match = /^(\d{1,2}):(\d{2})$/.exec(cleaned);
+  if (!match) {
+    return {
+      valid: false,
+      error: 'Informe o horário no formato válido HH:mm (ex.: 10:15 ou 15:45).',
+    };
+  }
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return { valid: false, error: 'O horário informado não é válido.' };
+  }
+
+  const normalized = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  const date = parseIsoDate(dateIso);
+  if (!isDateSelectable(date)) {
+    return { valid: false, error: 'A data selecionada não está disponível para agendamento.' };
+  }
+
+  const dayOfWeek = date.getDay();
+  const dayConfig = CLINIC_CONFIG.schedule.weeklyHours[dayOfWeek];
+  if (!dayConfig || !dayConfig.open || !dayConfig.start || !dayConfig.end) {
+    return { valid: false, error: 'A clínica não realiza atendimentos neste dia.' };
+  }
+
+  const requestedMin = hours * 60 + minutes;
+  const startMin = parseMinutes(dayConfig.start);
+  const lastAllowedMin =
+    parseMinutes(dayConfig.end) - CLINIC_CONFIG.schedule.lastSlotBeforeCloseMinutes;
+
+  if (requestedMin < startMin || requestedMin > lastAllowedMin) {
+    return {
+      valid: false,
+      error: `O horário ${normalized} não está disponível. Nosso atendimento neste dia é de ${dayConfig.label} (último horário às ${formatMinutes(lastAllowedMin)}).`,
+    };
+  }
+
+  // Impede contornar qualquer horário identificado com X (indisponível) na grade do dia
+  const daySlots = getDayTimeSlotsWithStatus(dateIso);
+  const matchingUnavailable = daySlots.find((s) => s.time === normalized && !s.available);
+  if (matchingUnavailable) {
+    return {
+      valid: false,
+      error: `O horário ${normalized} não está disponível nesta data. Por favor, informe outro horário.`,
+    };
+  }
+
+  const now = new Date();
+  const isToday = formatIsoDate(now) === dateIso;
+  const currentMinutesWithBuffer = now.getHours() * 60 + now.getMinutes() + 30;
+  if (isToday && requestedMin < currentMinutesWithBuffer) {
+    return {
+      valid: false,
+      error: `O horário ${normalized} não está mais disponível para hoje. Informe um horário posterior ou escolha outra data.`,
+    };
+  }
+
+  return { valid: true, normalized };
 }
 
 export function formatDisplayDatePtBr(dateIso: string): string {

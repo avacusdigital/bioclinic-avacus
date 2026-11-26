@@ -15,7 +15,7 @@ const FOOTER_NAV_ORDER = [
   { id: 'sobre', label: 'Sobre a Clínica' },
   { id: 'servicos', label: 'Serviços' },
   { id: 'antes-e-depois', label: 'Antes e Depois' },
-  { id: 'avaliacoes', label: 'Avaliações' },
+  { id: 'avaliacoes', label: 'Avalie a gente' },
   { id: 'agendamento', label: 'Agendamento' },
   { id: 'contato', label: 'Contato' },
   { id: 'faq', label: 'FAQ' },
@@ -200,10 +200,14 @@ export const Footer: React.FC<FooterProps> = ({
               </span>
               <p className="text-blush-100/90">
                 Desenvolvido por{' '}
-                <span className="font-semibold tracking-wide text-rosegold-light">
+                <a
+                  href="https://avacusdigital.com.br"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold tracking-wide text-rosegold-light underline decoration-rosegold-light/40 underline-offset-4 transition-colors hover:text-ivory hover:decoration-ivory"
+                >
                   Avacus Digital
-                </span>
-                .
+                </a>
               </p>
             </div>
 
